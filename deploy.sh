@@ -1,0 +1,1 @@
+scp -r ./build/* daniel@172.104.165.240:/var/www/audiobook-fe
