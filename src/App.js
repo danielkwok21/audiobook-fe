@@ -1,5 +1,5 @@
 import logo from './logo.svg';
-import './App.css';
+import './App.less';
 import {
   BrowserRouter as Router,
   Switch,
@@ -15,8 +15,6 @@ import TitlePage from './components/TitlesPage';
 import BookPage from './components/BookPage';
 
 function App() {
-
-  console.log(window.location)
 
   return (
     <div className="App">

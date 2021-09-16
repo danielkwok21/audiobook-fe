@@ -43,9 +43,9 @@ function TitlePage() {
   const [thumbnail, setThumbnail] = useState(null)
   const [progress, setProgress] = useState(0)
   const [duration, setDuration] = useState(0)
-  const BLUE = '#91d5ff'
-
+  const BLACK = 'black'
   const { title, chapter, urlProgress } = getUrlParams()
+
   useEffect(() => {
     getChapters(title)
       .then(res => {
@@ -55,9 +55,9 @@ function TitlePage() {
 
         return getProgress(title, chapter)
           .then(res2 => {
-            console.log(`previus progress: `, res2.progress)
-            if (res2.progress && !chapter) {
-              history.replace(`/book/${title}/${res2.progress.chapter}/${res2.progress.progress}`)
+            if (res2.progress) {
+              history.replace(`/book/${title}/${res2.progress.chapter}`)
+              ref.current.currentTime = res2.progress.progress
             } else {
               history.replace(`/book/${title}/${res.chapters[0]}`)
             }
@@ -207,7 +207,7 @@ function TitlePage() {
           <StepBackwardOutlined
             style={{
               fontSize: 50,
-              color: index === 0 ? 'grey' : BLUE,
+              color: index === 0 ? 'grey' : BLACK,
             }}
             onClick={onPrev}
           />
@@ -222,7 +222,8 @@ function TitlePage() {
               <PauseCircleOutlined
                 style={{
                   fontSize: 50,
-                  color: BLUE,
+                  color: BLACK,
+                  margin: 5,
                 }}
                 onClick={() => {
                   ref.current.pause()
@@ -233,7 +234,7 @@ function TitlePage() {
               <PlayCircleOutlined
                 style={{
                   fontSize: 50,
-                  color: BLUE,
+                  color: BLACK,
                 }}
                 onClick={() => {
                   ref.current.play()
@@ -252,7 +253,7 @@ function TitlePage() {
             onClick={onNext}
             style={{
               fontSize: 50,
-              color: index === chapters.length - 1 ? 'grey' : BLUE,
+              color: index === chapters.length - 1 ? 'grey' : BLACK,
             }}
 
           />
