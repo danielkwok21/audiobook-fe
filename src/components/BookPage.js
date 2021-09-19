@@ -7,7 +7,7 @@ import {
   useHistory,
   useParams
 } from "react-router-dom";
-import './bookpage.css'
+import './bookPage.css'
 import { useEffect, useState, useRef } from 'react'
 import { getAudio, getBooks, getChapters, getProgress, getThumbnail, updateProgress } from '../services/api';
 import {
@@ -20,10 +20,15 @@ import {
   StepBackwardOutlined,
 } from '@ant-design/icons'
 
+import Swiper from "react-slick";
+
+const COLORS = ['green', 'blue', 'red']
+const AUTOPLAY = true
 
 function TitlePage() {
 
   const ref = useRef(null)
+  const swiperRef = useRef(null)
   const params = useParams()
   const history = useHistory()
   let timerRef = null
@@ -37,29 +42,43 @@ function TitlePage() {
     }
   }
 
+  const { title, chapter: urlChapter, urlProgress } = getUrlParams()
 
   const [chapters, setChapters] = useState([])
-  const [isPlay, setIsPlay] = useState(true)
+  const [chapter, setChapter] = useState(urlChapter)
+  const [isPlay, setIsPlay] = useState(AUTOPLAY)
   const [thumbnail, setThumbnail] = useState(null)
   const [progress, setProgress] = useState(0)
   const [duration, setDuration] = useState(0)
   const BLACK = 'black'
-  const { title, chapter, urlProgress } = getUrlParams()
 
   useEffect(() => {
     getChapters(title)
-      .then(res => {
+      .then(chaptersRes => {
 
-        setChapters(res.chapters)
-        setThumbnail(res.thumbnail)
+        setChapters(chaptersRes.chapters)
+        setThumbnail(chaptersRes.thumbnail)
 
         return getProgress(title, chapter)
-          .then(res2 => {
-            if (res2.progress) {
-              history.replace(`/book/${title}/${res2.progress.chapter}`)
-              ref.current.currentTime = res2.progress.progress
+          .then(progressRes => {
+
+            /**
+             * If prev progress is detected, update url & state
+             */
+            if (progressRes.progress) {
+              history.replace(`/book/${title}/${progressRes.progress.chapter}`)
+              setChapter(progressRes.progress.chapter)
+
+              if (ref.current) {
+                ref.current.currentTime = progressRes.progress.progress
+              }
+
+              /**
+               * If not, default to chapter 1
+               */
             } else {
-              history.replace(`/book/${title}/${res.chapters[0]}`)
+              history.replace(`/book/${title}/${chaptersRes.chapters[0]}`)
+              setChapter(chapters[0])
             }
           })
       })
@@ -99,6 +118,8 @@ function TitlePage() {
     const nextChapter = chapters[nextIndex]
 
     history.replace(`/book/${title}/${nextChapter}`)
+    setProgress(0)
+    setChapter(nextChapter)
   }
 
   function onPrev() {
@@ -107,6 +128,8 @@ function TitlePage() {
     const prevChapter = chapters[prevIndex]
 
     history.replace(`/book/${title}/${prevChapter}`)
+    setProgress(0)
+    setChapter(prevChapter)
 
   }
 
@@ -122,144 +145,189 @@ function TitlePage() {
   return (
     <div
       style={{
-        textAlign: 'center'
+        textAlign: 'center',
       }}
     >
       <PageHeader
         onBack={() => history.goBack()}
-        title={`${chapter}`}
+        title={`Chapter ${index + 1} / ${chapters.length}`}
       />
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          flexDirection: 'column',
+      <Swiper
+        ref={swiperRef}
+        dots={false}
+        infinite={false}
+        speed={200}
+        slidesToShow={1}
+        slidesToScroll={1}
+        afterChange={nextIndex => {
+          const isNext = nextIndex > index
+          if (isNext) {
+            onNext()
+          } else {
+            onPrev()
+          }
         }}
       >
 
-        <img
-          style={{
-            borderRadius: 10,
-            display: 'inline-block',
-            margin: 10,
-            objectFit: 'scale-down',
-            height: 300
-          }}
-          src={thumbnail && getThumbnail(params.title, thumbnail)}
-        />
-        <video
-          ref={ref}
-          // controls
-          onPause={() => setIsPlay(false)}
-          onPlay={() => setIsPlay(true)}
-          onLoadedData={e => {
-            const videoEl = e.currentTarget
-            setDuration(videoEl.duration)
-            if (urlProgress) videoEl.currentTime = urlProgress
-          }}
-          autoPlay={true}
-          onTimeUpdate={audioElOnTimeUpdate}
-          style={{
-            height: 20
-          }}
-          src={audioUrl}>
+        {
+          chapters.map((currentChapter, currentIndex) => {
 
-        </video>
-        <h1>{title}</h1>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between'
-          }}
-        >
-          <p>{currentMinute} : {currentSecond}</p>
-          <p>{minute} : {second}</p>
-        </div>
-        <Slider
-          value={progress}
-          min={0}
-          max={100}
-          // tipFormatter={percentage => {
-          //   if (ref.current) {
+            return (
 
-          //     const currentDuration = ref.current.duration * percentage / 100
-
-          //     const minute = currentDuration / 60
-          //     const second = currentDuration % 60
-
-          //     return <div style={{display: 'flex' }}>
-          //       <p>{minute.toFixed(0)}</p> : <p>{second.toFixed(0)}</p>
-          //     </div>
-          //   }
-          // }}
-          onChange={percentage => {
-            const currentTime = Number((duration * percentage / 100).toFixed(2))
-            ref.current.currentTime = currentTime
-          }}
-        />
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-around',
-          }}
-        >
-          <StepBackwardOutlined
-            style={{
-              fontSize: 50,
-              color: index === 0 ? 'grey' : BLACK,
-            }}
-            onClick={onPrev}
-          />
-          <img
-            style={{
-              cursor: 'pointer'
-            }}
-            onClick={prev15}
-            src="https://img.icons8.com/ios/50/000000/skip-15-seconds-back.png" />
-          {
-            isPlay ?
-              <PauseCircleOutlined
+              <div
+                key={currentChapter}
                 style={{
-                  fontSize: 50,
-                  color: BLACK,
-                  margin: 5,
+                  // display: 'flex',
+                  // justifyContent: 'center',
+                  // flexDirection: 'column',
+                  // backgroundColor: 'red'
+                  // width: '100vw'
+                  margin: 10,
                 }}
-                onClick={() => {
-                  ref.current.pause()
-                  setIsPlay(false)
-                }}
-              />
-              :
-              <PlayCircleOutlined
-                style={{
-                  fontSize: 50,
-                  color: BLACK,
-                }}
-                onClick={() => {
-                  ref.current.play()
-                  setIsPlay(true)
-                }}
-              />
-          }
+              >
+                <div
+                  className='chapter'
 
-          <img
-            style={{
-              cursor: 'pointer'
-            }}
-            onClick={next15}
-            src="https://img.icons8.com/ios/50/000000/skip-ahead-15-seconds.png" />
-          <StepForwardOutlined
-            onClick={onNext}
-            style={{
-              fontSize: 50,
-              color: index === chapters.length - 1 ? 'grey' : BLACK,
-            }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <img
+                      style={{
+                        borderRadius: 10,
+                        width: '60%'
+                      }}
+                      src={thumbnail && getThumbnail(params.title, thumbnail)}
+                    />
+                  </div>
+                  {
+                    currentIndex === index ? (
 
-          />
-        </div>
-      </div>
+                      <video
+                        ref={ref}
+                        // controls
+                        onPause={() => setIsPlay(false)}
+                        onPlay={() => setIsPlay(true)}
+                        onLoadedData={e => {
+                          const videoEl = e.currentTarget
+                          setDuration(videoEl.duration)
+                          if (urlProgress) videoEl.currentTime = urlProgress
+                        }}
+                        autoPlay={AUTOPLAY}
+                        onTimeUpdate={audioElOnTimeUpdate}
+                        style={{
+                          height: 0
+                        }}
+                        src={audioUrl}>
 
+                      </video>
+                    ) : null
+                  }
+                  <h1>{title}</h1>
+                  {/* <p>{index} / {chapters.length}</p> */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <p>{currentMinute}: {currentSecond}</p>
+                    <p>{minute}: {second}</p>
+                  </div>
+                  <Slider
+                    value={progress}
+                    min={0}
+                    max={100}
+                    // tipFormatter={percentage => {
+                    //   if (ref.current) {
+
+                    //     const currentDuration = ref.current.duration * percentage / 100
+
+                    //     const minute = currentDuration / 60
+                    //     const second = currentDuration % 60
+
+                    //     return <div style={{display: 'flex' }}>
+                    //       <p>{minute.toFixed(0)}</p> : <p>{second.toFixed(0)}</p>
+                    //     </div>
+                    //   }
+                    // }}
+                    onChange={percentage => {
+                      const currentTime = Number((duration * percentage / 100).toFixed(2))
+                      ref.current.currentTime = currentTime
+                    }}
+                  />
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-around',
+                    }}
+                  >
+                    <StepBackwardOutlined
+                      style={{
+                        fontSize: 50,
+                        color: index === 0 ? 'grey' : BLACK,
+                      }}
+                      onClick={onPrev}
+                    />
+                    <img
+                      style={{
+                        cursor: 'pointer',
+                      }}
+                      onClick={prev15}
+                      src="https://img.icons8.com/ios/50/000000/skip-15-seconds-back.png" />
+                    {
+                      isPlay ?
+                        <PauseCircleOutlined
+                          style={{
+                            fontSize: 50,
+                            color: BLACK,
+                            margin: 5,
+                          }}
+                          onClick={() => {
+                            ref.current.pause()
+                            setIsPlay(false)
+                          }}
+                        />
+                        :
+                        <PlayCircleOutlined
+                          style={{
+                            fontSize: 50,
+                            color: BLACK,
+                            margin: 5,
+                          }}
+                          onClick={() => {
+                            ref.current.play()
+                            setIsPlay(true)
+                          }}
+                        />
+                    }
+
+                    <img
+                      style={{
+                        cursor: 'pointer'
+                      }}
+                      onClick={next15}
+                      src="https://img.icons8.com/ios/50/000000/skip-ahead-15-seconds.png" />
+                    <StepForwardOutlined
+                      onClick={onNext}
+                      style={{
+                        fontSize: 50,
+                        color: index === chapters.length - 1 ? 'grey' : BLACK,
+                      }}
+
+                    />
+
+                  </div>
+                </div>
+              </div>
+            )
+          })
+        }
+      </Swiper >
     </div >
   );
 }

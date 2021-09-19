@@ -42,3 +42,19 @@ export const getProgress = (book, chapter) => {
     return fetch(`${config.api}/progress/${book}/${chapter}`)
         .then(res => res.json())
 }
+
+export const addFingerprint = () => {
+    const width = window.innerWidth
+    const height = window.innerHeight
+    const userAgent = navigator.userAgent
+
+
+    return fetch(`${config.api}/fingerprint`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+            width, height, userAgent
+        })
+    })
+        .then(res => res.json())
+}

@@ -7,7 +7,7 @@ import {
   Link
 } from "react-router-dom";
 import { useEffect, useState } from 'react'
-import { getBooks } from './services/api';
+import { addFingerprint, getBooks } from './services/api';
 import {
   Card
 } from 'antd'
@@ -15,6 +15,10 @@ import TitlePage from './components/TitlesPage';
 import BookPage from './components/BookPage';
 
 function App() {
+
+  useEffect(() => {
+    addFingerprint()
+  }, [])
 
   return (
     <div className="App">
