@@ -38,8 +38,12 @@ export const updateProgress = (book, chapter, progress) => {
     })
         .then(res => res.json())
 }
-export const getProgress = (book, chapter) => {
-    return fetch(`${config.api}/progress/${book}/${chapter}`)
+export const getProgress = (book,) => {
+    return fetch(`${config.api}/progress/${book}`)
+        .then(res => res.json())
+}
+export const getProgresses = () => {
+    return fetch(`${config.api}/progress`)
         .then(res => res.json())
 }
 

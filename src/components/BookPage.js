@@ -81,6 +81,7 @@ function TitlePage() {
               setChapter(chapters[0])
             }
           })
+
       })
 
     timerRef = setInterval(() => {
@@ -90,7 +91,7 @@ function TitlePage() {
       const { title, chapter, urlProgress } = getUrlParams()
 
       updateProgress(title, chapter, currentDuration)
-    }, 3 * 1000)
+    }, 10 * 1000)
 
   }, [])
 

@@ -7,9 +7,10 @@ import {
     useHistory
 } from "react-router-dom";
 import { useEffect, useState } from 'react'
-import { getBooks, getChapters, getThumbnail } from '../services/api';
+import { getBooks, getChapters, getProgresses, getThumbnail } from '../services/api';
 import {
-    Card
+    Card,
+    Progress
 } from 'antd'
 
 function TitlePage() {
@@ -43,41 +44,40 @@ function TitlePage() {
             <Router>
                 <div
                     style={{
-                        // backgroundColor: 'red',
                         display: 'flex',
-                        // justifyContent: 'center',
-                        overflow: 'scroll'
+                        alignItems: 'center',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        overflow: 'scroll',
+                        flexWrap: 'wrap',
+
                     }}
                 >
                     {
-                        books.map(book => {
+                        [...books].map((book, i) => {
                             return (
-                                <img
+
+                                <div
                                     style={{
-                                        borderRadius: 10,
-                                        display: 'inline-block',
+                                        display: 'flex',
+                                        flex: 3,
+                                        flexDirection: 'column',
                                         margin: 10,
                                     }}
-                                    onClick={() => history.push(`/book/${book.title}`)}
-                                    key={book.title}
-                                    height={200} src={getThumbnail(book.title, book.thumbnail)}
-                                />
+                                >
+                                    <img
+                                        style={{
+                                            borderRadius: 10,
+                                            display: 'inline-block',
+                                        }}
+                                        onClick={() => history.push(`/book/${book.title}`)}
+                                        key={book.title}
+                                        height={200} src={getThumbnail(book.title, book.thumbnail)}
+                                    />
+                                </div>
                             )
                         })
                     }
-                    <Card
-
-                        style={{
-                            borderRadius: 10,
-                            display: 'inline-block',
-                            margin: 10,
-                            height: 200,
-                            width: 130,
-                            textAlign: 'center'
-                        }}
-                    >
-                        <h3>Coming soon</h3>
-                    </Card>
                 </div>
             </Router>
 
